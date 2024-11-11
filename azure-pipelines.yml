@@ -1,0 +1,47 @@
+# Trigger pipeline on pushes to the main branch
+trigger:
+  branches:
+    include:
+      - main  # Adjust for your branch name
+
+# Use an Ubuntu-based agent pool
+pool:
+  vmImage: 'ubuntu-latest'
+
+# Define variables
+variables:
+  nodeVersion: '16.x'  # Specify the Node.js version needed
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildAndTest
+        displayName: 'Build and Test Node.js Project'
+        
+        steps:
+          # Step 1: Set up Node.js version
+          - task: UseNode@1
+            inputs:
+              versionSpec: $(nodeVersion)
+              checkLatest: true
+
+          # Step 2: Install dependencies
+          - script: |
+              npm install
+            displayName: 'Install dependencies'
+
+          # Step 3: Run tests
+          - script: |
+              npm test
+            displayName: 'Run tests'
+
+          # Step 4: Build the project
+          - script: |
+              npm run build
+            displayName: 'Build project'
+
+          # Step 5: Publish build artifacts
+          - publish: $(System.DefaultWorkingDirectory)/dist  # Adjust the output directory if needed
+            artifact: 'drop'
+            displayName: 'Publish artifacts'
+
